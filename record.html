@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ShockerScreen - Online Screen Recorder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@media only screen and (max-width: 1000px) {
+  #record {
+    width: 100%;
+  }
+  #record div {
+    width: 100%;
+  }
+   video {
+    width: 100%;
+  }
+   .sponsored {
+    display: none;
+}
+}
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+#video {
+    background-color: black;
+    margin-bottom: 1em;
+}
+
+.sponsored {
+  overflow-y: scroll;
+}
+
+#record {
+    background-color: rgb(214, 26, 26);
+    border: none;
+    border-radius: 50%;
+    margin: 1em 0;
+    height: 5em;
+    width: 5em;
+}
+
+#record div {
+    background-color: white;
+    border: none;
+    border-radius: 50%;
+    margin: auto;
+    height: 1.5em;
+    width: 1.5em;
+}
+
+#download {
+    display: none;
+    background-color: #e38ae1;
+    border-radius: 1em;
+    color: black;
+    text-decoration: none;
+    margin-top: 1em;
+    padding: 1em;
+}
+</style>
+</head>
+<body>
+<div style="height: 880px; float: right" class="sponsored">
+<p style="color: gray; font-size: 12px; font-family: Arial">SPONSORED</p>
+<a target="_blank" href="https://feedite.pythonanywhere.com"><img width="300px" src="ad1.png" alt="ads"></a><br>
+<a target="_blank" href="https://guessoword.com"><img width="300px" src="ad2.png" alt="ads"></a><br>
+<a target="_blank" href="https://vorizi.pythonanywhere.com"><img width="300px" src="ad3.png" alt="ads"></a><br>
+<a target="_blank" href="https://feedite.pythonanywhere.com"><img width="300px" src="ad1.png" alt="ads"></a>
+</div>
+<h1>ShockerScreen Record</h1>
+<video id="video" width="569" height="320"></video><br>
+<span id="time">0:00</span><br>
+<button id="record"><div></div></button><br>
+<input type="checkbox" id="mic">
+<label id="micl" for="mic">Mic</label><br>
+<a id="download">Download</a>
+<script>
+const video = document.getElementById('video');
+const time = document.getElementById('time');
+const record = document.getElementById('record');
+const recordIcon = record.querySelector('div');
+const mic = document.getElementById('mic');
+const micl = document.getElementById('micl');
+const download = document.getElementById('download');
+let url = null;
+let recorder = null;
+
+async function addAudioStream(stream) {
+    mic.disabled = true;
+    if (!mic.checked) return;
+
+    let audio;
+    try {
+        audio = await navigator.mediaDevices.getUserMedia({ audio: {
+            autoGainControl: false,
+            noiseSuppression: false,
+            echoCancellation: false,
+            channelCount: 1
+        }});
+    } catch (err) {
+        console.info('No audio: ' + err);
+        micl.innerHTML = "Mic (blocked)";
+        return;
+    }
+
+    audio.getAudioTracks().forEach(track => stream.addTrack(track));
+}
+
+function startVideo(stream) {
+    video.controls = false;
+    video.srcObject = new MediaStream(stream.getVideoTracks());
+    video.play();
+}
+
+function stopVideo() {
+    video.pause();
+    video.srcObject = null;
+    video.controls = true;
+}
+
+function newRecorder(stream, iid) {
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+    const chunks = [];
+
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = e => stopCapture(stream, iid, chunks);
+
+    return recorder;
+}
+
+function finalizeRecording(chunks) {
+    if (chunks.size == 0) return;
+
+    if (url) URL.revokeObjectURL(url);
+
+    const completeBlob = new Blob(chunks, { type: chunks[0].type });
+    url = URL.createObjectURL(completeBlob);
+
+    video.src = url;
+
+    download.href = url;
+    download.download = 'capture.webm';
+    download.style.display = 'inline-block';
+    download.click();
+}
+
+function startTimer() {
+    const start = Math.floor(performance.now() / 1000);
+    let before = start;
+    time.innerHTML = '0:00';
+
+    return setInterval(() => {
+        const now = Math.floor(performance.now() / 1000);
+        if (now == before) return;
+
+        before = now;
+
+        const total = now - start;
+        const min = Math.floor(total / 60);
+        const sec = total - min * 60;
+
+        time.innerHTML = min + ':' + ((sec < 10) ? '0' + sec : sec);
+    }, 200);
+}
+
+async function startCapture() {
+    let stream;
+    try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    } catch (err) { console.error('Error: ' + err); return null; }
+
+    await addAudioStream(stream);
+    dumpInfo(stream);
+    startVideo(stream);
+
+    const iid = startTimer();
+
+    const recorder = newRecorder(stream, iid);
+    recorder.start();
+
+    recordIcon.style.borderRadius = 0;
+
+    return recorder;
+}
+
+function stopCapture(stream, iid, chunks) {
+    recordIcon.style = '';
+    clearInterval(iid);
+    stopVideo();
+    stream.getTracks().forEach(track => track.stop());
+    micl.innerHTML = "Mic";
+    mic.disabled = false;
+
+    finalizeRecording(chunks);
+
+    recorder = null;
+    record.disabled = false;
+}
+
+function dumpInfo(stream) {
+    stream.getTracks().forEach(track => {
+        console.info("\nTrack settings:\n" +
+            JSON.stringify(track.getSettings()) +
+            "\nTrack constraints:\n" +
+            JSON.stringify(track.getConstraints()));
+    });
+}
+
+record.onclick = async e => {
+    record.disabled = true;
+
+    if (recorder) {
+        recorder.stop();
+    } else {
+        recorder = await startCapture();
+        record.disabled = false;
+    }
+};
+</script>
+
+<br>
+<p>&copy 2022 ShockerScreen - The Best Screen Recording Solution.</p>
+<b><p>Compatible With:</p></b>
+<p style="color: green">Google Chrome (Tested)</p>
+<p style="color: green">Microsoft Edge (Tested)</p>
+<p style="color: green">Mozilla Firefox (Tested)</p>
+<p style="color: orange">Apple Safari (Not Tested)</p>
+</body>
+</html>
