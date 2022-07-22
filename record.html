@@ -5,6 +5,80 @@
 <title>ShockerScreen - Online Screen Recorder</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+
+.new {
+  padding: 50px;
+}
+
+.form-group {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.form-group input {
+  padding: 0;
+  height: initial;
+  width: initial;
+  margin-bottom: 0;
+  display: none;
+  cursor: pointer;
+}
+
+.form-group label {
+  position: relative;
+  cursor: pointer;
+}
+
+.form-group label:before {
+  content:'';
+  -webkit-appearance: none;
+  background-color: transparent;
+  border: 2px solid #0079bf;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.form-group input:checked + label:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 2px;
+  left: 9px;
+  width: 6px;
+  height: 14px;
+  border: solid #0079bf;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+@font-face {
+  font-family: 'Font';
+  font-style: normal;
+  font-weight: 400;
+  src: url(font.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+body {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
 @media only screen and (max-width: 1000px) {
   #record {
     width: 100%;
@@ -20,7 +94,7 @@
 }
 }
 body {
-    font-family: sans-serif;
+    font-family: Font;
     text-align: center;
 }
 
@@ -52,17 +126,27 @@ body {
 }
 
 #download {
-    display: none;
-    background-color: #e38ae1;
-    border-radius: 1em;
-    color: black;
-    text-decoration: none;
-    margin-top: 1em;
-    padding: 1em;
+  display: none;
+  background: #ededed;
+  border: 1px solid #ccc;
+  padding: 10px 30px;
+  border-radius: 3px;
+  cursor: pointer;
+  border-radius: 32px;
+  border: 2px solid green;
+}
+
+#download:active {
+  background: #e5e5e5;
+  -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
+     -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
+          box-shadow: inset 0px 0px 5px #c1c1c1;
+   outline: none;
 }
 </style>
 </head>
 <body>
+<!--
 <div style="height: 880px; float: right" class="sponsored">
 <p style="color: gray; font-size: 12px; font-family: Arial">SPONSORED</p>
 <a target="_blank" href="https://feedite.pythonanywhere.com"><img width="300px" src="ad1.png" alt="ads"></a><br>
@@ -70,12 +154,17 @@ body {
 <a target="_blank" href="https://vorizi.pythonanywhere.com"><img width="300px" src="ad3.png" alt="ads"></a><br>
 <a target="_blank" href="https://feedite.pythonanywhere.com"><img width="300px" src="ad1.png" alt="ads"></a>
 </div>
+-->
 <h1>ShockerScreen Record</h1>
 <video id="video" width="569" height="320"></video><br>
 <span id="time">0:00</span><br>
-<button id="record"><div></div></button><br>
-<input type="checkbox" id="mic">
-<label id="micl" for="mic">Mic</label><br>
+<button id="record"><div></div></button>
+<div class="new">
+<div class="form-group">
+<input type="checkbox" id="mic" checked>
+<label id="micl" for="mic">Microphone</label><br>
+</div>
+</div>
 <a id="download">Download</a>
 <script>
 const video = document.getElementById('video');
@@ -228,5 +317,7 @@ record.onclick = async e => {
 <p style="color: green">Microsoft Edge (Tested)</p>
 <p style="color: green">Mozilla Firefox (Tested)</p>
 <p style="color: orange">Apple Safari (Not Tested)</p>
+</body>
+</html>
 </body>
 </html>
